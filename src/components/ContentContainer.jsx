@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchData } from "../store/actions";
 import Alert from "./Alert";
 import Card from "./Card";
-import Loading from "./Loading";
 import Repo from "./Repo";
 
 export default function ContentContainer() {
     const [searchInput, setSearchInput] = useState("");
-    const [user, setUser] = useState([]);
-    const [repos, setRepos] = useState([]);
-    const [loadingUser, setLoadingUser] = useState(true);
-    const [loadingRepos, setLoadingRepos] = useState(true);
     const [error, setError] = useState(null);
-    const [message, setMessage] = useState(null);
+
+    const dispatch = useDispatch();
+
+    const user = useSelector((state) => state.dataReducer.user);
+    const repos = useSelector((state) => state.dataReducer.repos);
 
     useEffect(() => {
         config("example");
@@ -29,31 +30,12 @@ export default function ContentContainer() {
         if (!searchInput) {
             setError("Please input username github..");
         } else {
-            setMessage(null);
             config(searchInput);
         };
     };
 
     function config(searchInput) {
-        fetch(`https://api.github.com/users/${searchInput}`)
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.message) {
-                    setMessage(data.message);
-                } else {
-                    setUser(data);
-                    setLoadingUser(false);
-                };
-            })
-            .catch((err) => console.log(err));
-
-        fetch(`https://api.github.com/users/${searchInput}/repos`)
-            .then((response) => response.json())
-            .then((data) => {
-                setRepos(data);
-                setLoadingRepos(false);
-            })
-            .catch((err) => console.log(err));
+        dispatch(fetchData(searchInput));
     };
 
     return (
@@ -71,10 +53,6 @@ export default function ContentContainer() {
             </form>
             {error ? (
                 <Alert error={error} />
-            ) : loadingUser && loadingRepos ? (
-                <Loading />
-            ) : message ? (
-                <p className="text-center mt-5">{message}</p>
             ) : (
                 <div className="row">
                     <div className="col">
